@@ -1,0 +1,27 @@
+name: Sync GH Pages
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  copy-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Copy daily plots to docs/images
+        run: |
+          mkdir -p doc/images
+          cp output/fig/solarflux/*.png docs/images/
+          ls output/fig/solarflux/callisto_meteoswiss_*.png | \
+          sed -E 's/.*callisto_meteoswiss_([0-9]+)\.png/\1/' | \
+          sort | jq -R . | jq -s . > docs/images/images.json
+      - name: Commit and push
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add docs/images
+          git commit -m "Update images [skip ci]" || echo "No changes to commit"
+          git push
+
